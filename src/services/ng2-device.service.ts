@@ -4,48 +4,62 @@
 
 import {Injectable} from '@angular/core';
 import * as Constants from '../constants/ng2-device.constants';
-import {ReTree} from '../services/retree.service';
+import {ReTree} from './retree.service';
+
 @Injectable()
-export class Device{
-    ua: any;
-    userAgent: any;
-    os : any;
-    browser: any;
-    device : any;
-    os_version: any;
-    browser_version:any;
+export class Device {
+    public userAgent: any;
+    public os: any;
+    public browser: any;
+    public device: any;
+    public os_version: any;
+    public browser_version: any;
+
+    public isMobile: boolean;
+    public isTablet: boolean;
+    public isDesktop: boolean;
+
     constructor() {
-        let self = this;
-        self.ua = window.navigator.userAgent;
-        self._setDeviceInfo();
+        this._setDeviceInfo();
+        this._cacheDeviceType();
     }
 
-    private _setDeviceInfo(){
-        let self = this;
+    public getDeviceInfo(): any {
+        return {
+            userAgent: this.userAgent,
+            os: this.os,
+            browser: this.browser,
+            device: this.device,
+            os_version: this.os_version,
+            browser_version: this.browser_version,
+        };
+    }
+
+    private _setDeviceInfo(): void {
         let reTree = new ReTree();
-        let ua = self.ua;
-        self.userAgent = ua;
-        self.os = Object.keys(Constants.OS).reduce(function (obj:any, item:any) {
+        let ua = window.navigator.userAgent;
+
+        this.os = Object.keys(Constants.OS).reduce((obj: any, item: any) => {
             obj[Constants.OS[item]] = reTree.test(ua, Constants.OS_RE[item]);
             return obj;
         }, {});
 
-        self.browser = Object.keys(Constants.BROWSERS).reduce(function (obj:any, item:any) {
+        this.browser = Object.keys(Constants.BROWSERS).reduce((obj: any, item: any) => {
             obj[Constants.BROWSERS[item]] = reTree.test(ua, Constants.BROWSERS_RE[item]);
             return obj;
         }, {});
 
-        self.device = Object.keys(Constants.DEVICES).reduce(function (obj:any, item:any) {
+        this.device = Object.keys(Constants.DEVICES).reduce((obj: any, item: any) => {
             obj[Constants.DEVICES[item]] = reTree.test(ua, Constants.DEVICES_RE[item]);
             return obj;
         }, {});
 
-        self.os_version = Object.keys(Constants.OS_VERSIONS).reduce(function (obj:any, item:any) {
+        this.os_version = Object.keys(Constants.OS_VERSIONS).reduce((obj: any, item: any) => {
             obj[Constants.OS_VERSIONS[item]] = reTree.test(ua, Constants.OS_VERSIONS_RE[item]);
             return obj;
         }, {});
 
-        self.os = [
+        this.os = [
             Constants.OS.WINDOWS,
             Constants.OS.IOS,
             Constants.OS.MAC,
@@ -55,11 +69,11 @@ export class Device{
             Constants.OS.FIREFOX_OS,
             Constants.OS.CHROME_OS,
             Constants.OS.WINDOWS_PHONE
-        ].reduce(function (previousValue, currentValue) {
-            return (previousValue === Constants.OS.UNKNOWN && self.os[currentValue]) ? currentValue : previousValue;
+        ].reduce((previousValue, currentValue) => {
+            return (previousValue === Constants.OS.UNKNOWN && this.os[currentValue]) ? currentValue : previousValue;
         }, Constants.OS.UNKNOWN);
 
-        self.browser = [
+        this.browser = [
             Constants.BROWSERS.CHROME,
             Constants.BROWSERS.FIREFOX,
             Constants.BROWSERS.SAFARI,
@@ -67,11 +81,11 @@ export class Device{
             Constants.BROWSERS.IE,
             Constants.BROWSERS.MS_EDGE,
             Constants.BROWSERS.FB_MESSANGER
-        ].reduce(function (previousValue, currentValue) {
-            return (previousValue === Constants.BROWSERS.UNKNOWN && self.browser[currentValue]) ? currentValue : previousValue;
+        ].reduce((previousValue, currentValue) => {
+            return (previousValue === Constants.BROWSERS.UNKNOWN && this.browser[currentValue]) ? currentValue : previousValue;
         }, Constants.BROWSERS.UNKNOWN);
 
-        self.device = [
+        this.device = [
             Constants.DEVICES.ANDROID,
             Constants.DEVICES.I_PAD,
             Constants.DEVICES.IPHONE,
@@ -85,11 +99,11 @@ export class Device{
             Constants.DEVICES.APPLE_TV,
             Constants.DEVICES.GOOGLE_TV,
             Constants.DEVICES.VITA
-        ].reduce(function (previousValue, currentValue) {
-            return (previousValue === Constants.DEVICES.UNKNOWN && self.device[currentValue]) ? currentValue : previousValue;
+        ].reduce((previousValue, currentValue) => {
+            return (previousValue === Constants.DEVICES.UNKNOWN && this.device[currentValue]) ? currentValue : previousValue;
         }, Constants.DEVICES.UNKNOWN);
 
-        self.os_version = [
+        this.os_version = [
             Constants.OS_VERSIONS.WINDOWS_3_11,
             Constants.OS_VERSIONS.WINDOWS_95,
             Constants.OS_VERSIONS.WINDOWS_ME,
@@ -121,33 +135,29 @@ export class Device{
             Constants.OS_VERSIONS.MACOSX_13,
             Constants.OS_VERSIONS.MACOSX_14,
             Constants.OS_VERSIONS.MACOSX_15
-        ].reduce(function (previousValue, currentValue) {
-            return (previousValue === Constants.OS_VERSIONS.UNKNOWN && self.os_version[currentValue]) ? currentValue : previousValue;
+        ].reduce((previousValue, currentValue) => {
+            return (previousValue === Constants.OS_VERSIONS.UNKNOWN && this.os_version[currentValue]) ? currentValue : previousValue;
         }, Constants.OS_VERSIONS.UNKNOWN);
 
-        self.browser_version = "0";
-        if (self.browser !== Constants.BROWSERS.UNKNOWN) {
-            var re = Constants.BROWSER_VERSIONS_RE[self.browser];
-            var res = reTree.exec(ua, re);
+        this.browser_version = '0';
+        if (this.browser !== Constants.BROWSERS.UNKNOWN) {
+            let re = Constants.BROWSER_VERSIONS_RE[this.browser];
+            let res = reTree.exec(ua, re);
             if (!!res) {
-                self.browser_version = res[1];
+                this.browser_version = res[1];
             }
         }
+
+        this.userAgent = ua;
     }
 
-    public getDeviceInfo(): any{
-        let self = this;
-        return {
-            userAgent: self.userAgent,
-            os : self.os,
-            browser: self.browser,
-            device : self.device,
-            os_version: self.os_version,
-            browser_version:self.browser_version,
-        };
+    private _cacheDeviceType(): void {
+        this.isMobile = this._isMobile();
+        this.isTablet = this._isTablet();
+        this.isDesktop = this._isDesktop();
     }
-    public isMobile() {
-        let self = this;
+
+    private _isMobile(): boolean {
         return [
             Constants.DEVICES.ANDROID,
             Constants.DEVICES.I_PAD,
@@ -157,29 +167,27 @@ export class Device{
             Constants.DEVICES.FIREFOX_OS,
             Constants.DEVICES.WINDOWS_PHONE,
             Constants.DEVICES.VITA
-        ].some(function (item) {
-            return self.device == item;
+        ].some((item) => {
+            return this.device === item;
         });
     };
 
-    public isTablet() {
-        let self = this;
+    private _isTablet(): boolean {
         return [
             Constants.DEVICES.I_PAD,
             Constants.DEVICES.FIREFOX_OS
-        ].some(function (item) {
-            return self.device == item;
+        ].some((item) => {
+            return this.device === item;
         });
     };
 
-    public isDesktop() {
-        let self = this;
+    private _isDesktop(): boolean {
         return [
             Constants.DEVICES.PS4,
             Constants.DEVICES.CHROME_BOOK,
             Constants.DEVICES.UNKNOWN
-        ].some(function (item) {
-            return self.device == item;
+        ].some((item) => {
+            return this.device === item;
         });
     };
 }

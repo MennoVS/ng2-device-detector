@@ -99,7 +99,6 @@
   },
   "scripts": {
     "lint": "tslint src/**/*.ts",
-    "postinstall": "tsc",
     "prepublish": "tsc",
     "test": "tsc && karma start",
     "tsc": "tsc"
